@@ -1,0 +1,387 @@
+-- CREAMOS LA BASE DE DATOS Y LAS RELACIONES
+
+-- Crear la base de datos si no existe
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'Museo')
+BEGIN
+    CREATE DATABASE Museo;
+END;
+
+-- Usar la base de datos
+USE Museo;
+
+-- Crear tabla Autor si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Autor]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Autor (
+        ID_Autor INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(50),
+        nacionalidad VARCHAR(50),  -- Agregado para almacenar la nacionalidad del autor
+        fecha_nacimiento DATE,     -- Agregado para registrar la fecha de nacimiento del autor
+        fecha_fallecimiento DATE   -- Agregado para registrar la fecha de fallecimiento del autor (si aplica)
+    );
+END;
+
+-- Crear tabla Categoria si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Categoria]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Categoria (
+        ID_Categoria INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(50),
+        descripcion TEXT             -- Agregado para dar una descripción más detallada de la categoría
+    );
+END;
+
+-- Crear tabla Contrato si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Contrato]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Contrato (
+        ID_Contrato INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        fecha_inicio DATE,           -- Agregado para registrar la fecha de inicio del contrato
+        fecha_fin DATE               -- Agregado para registrar la fecha de finalización del contrato
+    );
+END;
+
+-- Crear tabla Prestador si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Prestador]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Prestador (
+        ID_Prestador INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(50),
+        telefono VARCHAR(15),
+        email VARCHAR(100),          -- Agregado para contacto por correo electrónico
+        direccion VARCHAR(255)       -- Agregado para la dirección del prestador
+    );
+END;
+
+-- Crear tabla Zona si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Zona]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Zona (
+        ID_Zona INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(30),
+        capacidad INT,               -- Agregado para registrar la capacidad máxima de personas en la zona
+        ubicacion VARCHAR(100)       -- Agregado para detallar la ubicación de la zona en el museo
+    );
+END;
+
+-- Crear tabla Guia si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Guia]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Guia (
+        ID_Guia INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(50),
+        edad INT,
+        experiencia INT,             -- Agregado para registrar los años de experiencia del guía
+        idioma VARCHAR(50)           -- Agregado para registrar los idiomas que habla el guía
+    );
+END;
+
+-- Crear tabla Visitante si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Visitante]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Visitante (
+        ID_Visitante INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(50),
+        telefono VARCHAR(15),
+        email VARCHAR(100),          -- Agregado para el contacto por correo electrónico
+        direccion VARCHAR(255),      -- Agregado para registrar la dirección del visitante
+        tipo_visitante VARCHAR(50)   -- Agregado para distinguir entre visitante individual, grupo, o escolar
+    );
+END;
+
+-- Crear tabla Recorrido si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Recorrido]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Recorrido (
+        ID_Recorrido INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ID_Guia INT,
+        duracion INT,                -- Agregado para registrar la duración del recorrido en minutos
+        fecha DATE,                  -- Agregado para registrar la fecha del recorrido
+        FOREIGN KEY (ID_Guia) REFERENCES Guia (ID_Guia)
+    );
+END;
+
+-- Crear tabla Ficha_Ingreso si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Ficha_Ingreso]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Ficha_Ingreso (
+        ID_Ficha_Ingreso INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        fecha DATE,
+        ID_Recorrido INT,
+        ID_Visitante INT,
+        tipo_ingreso VARCHAR(50),    -- Agregado para distinguir el tipo de ingreso (ej. General, Estudiante, Tercera Edad)
+        FOREIGN KEY (ID_Recorrido) REFERENCES Recorrido (ID_Recorrido),
+        FOREIGN KEY (ID_Visitante) REFERENCES Visitante (ID_Visitante)
+    );
+END;
+
+-- Crear tabla Recorrido_Zona si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Recorrido_Zona]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Recorrido_Zona (
+        ID_Recorrido_Zona INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ID_Recorrido INT,
+        ID_Zona INT,
+        FOREIGN KEY (ID_Recorrido) REFERENCES Recorrido (ID_Recorrido),
+        FOREIGN KEY (ID_Zona) REFERENCES Zona (ID_Zona)
+    );
+END;
+
+-- Crear tabla Prestamo si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Prestamo]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Prestamo (
+        ID_Prestamo INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ID_Prestador INT,
+        ID_Contrato INT,
+        fecha_prestamo DATE,
+        fecha_devolucion DATE,       -- Agregado para registrar la fecha de devolución del préstamo
+        FOREIGN KEY (ID_Prestador) REFERENCES Prestador (ID_Prestador),
+        FOREIGN KEY (ID_Contrato) REFERENCES Contrato (ID_Contrato)
+    );
+END;
+
+-- Crear tabla Exposicion si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Exposicion]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Exposicion (
+        ID_Exposicion INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        ID_Zona INT,
+        nombre VARCHAR(100),
+        fecha_inicio DATE,           -- Agregado para registrar la fecha de inicio de la exposición
+        fecha_fin DATE,              -- Agregado para registrar la fecha de finalización de la exposición
+        FOREIGN KEY (ID_Zona) REFERENCES Zona (ID_Zona)
+    );
+END;
+
+-- Crear tabla Obra si no existe
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Obra]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE Obra (
+        ID_Obra INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        nombre VARCHAR(100),
+        ID_Autor INT,
+        ID_Categoria INT,
+        ID_Exposicion INT,
+        ID_Prestamo INT,
+        anio_creacion INT,           -- Agregado para registrar el año de creación de la obra
+        descripcion TEXT,            -- Agregado para describir la obra
+        valor_estimado DECIMAL(18,2),-- Agregado para registrar el valor estimado de la obra
+        FOREIGN KEY (ID_Autor) REFERENCES Autor (ID_Autor),
+        FOREIGN KEY (ID_Categoria) REFERENCES Categoria (ID_Categoria),
+        FOREIGN KEY (ID_Prestamo) REFERENCES Prestamo (ID_Prestamo),
+        FOREIGN KEY (ID_Exposicion) REFERENCES Exposicion (ID_Exposicion)
+    );
+END;
+
+
+
+
+
+-- INSERTAMOS DATOS DE EJEMPLO
+
+-- Insertar datos en la tabla Autor
+INSERT INTO Autor (nombre, nacionalidad, fecha_nacimiento, fecha_fallecimiento)
+VALUES 
+('Pablo Picasso', 'España', '1881-10-25', '1973-04-08'),
+('Leonardo da Vinci', 'Italia', '1452-04-15', '1519-05-02'),
+('Frida Kahlo', 'México', '1907-07-06', '1954-07-13');
+
+-- Insertar datos en la tabla Categoria
+INSERT INTO Categoria (nombre, descripcion)
+VALUES 
+('Pintura', 'Obras de arte creadas usando pigmentos líquidos'),
+('Escultura', 'Obras de arte tridimensionales'),
+('Fotografía', 'Obras capturadas mediante cámaras fotográficas');
+
+-- Insertar datos en la tabla Contrato
+INSERT INTO Contrato (fecha_inicio, fecha_fin)
+VALUES 
+('2024-01-01', '2024-12-31'),
+('2023-06-01', '2023-12-01'),
+('2024-03-15', '2025-03-15');
+
+-- Insertar datos en la tabla Prestador
+INSERT INTO Prestador (nombre, telefono, email, direccion)
+VALUES 
+('Museo del Prado', '915676800', 'contacto@prado.es', 'Madrid, España'),
+('Museo Louvre', '33140205050', 'contact@louvre.fr', 'París, Francia'),
+('Galería Uffizi', '39552766304', 'info@uffizi.it', 'Florencia, Italia');
+
+-- Insertar datos en la tabla Zona
+INSERT INTO Zona (nombre, capacidad, ubicacion)
+VALUES 
+('Sala de Pinturas', 50, 'Planta Baja, ala norte'),
+('Sala de Esculturas', 30, 'Planta Alta, ala sur'),
+('Sala de Fotografía', 40, 'Planta Baja, ala este');
+
+-- Insertar datos en la tabla Guia
+INSERT INTO Guia (nombre, edad, experiencia, idioma)
+VALUES 
+('Ana García', 35, 10, 'Español, Inglés'),
+('John Smith', 28, 5, 'Inglés, Francés'),
+('Lucía Martínez', 42, 15, 'Español, Italiano');
+
+-- Insertar datos en la tabla Visitante
+INSERT INTO Visitante (nombre, telefono, email, direccion, tipo_visitante)
+VALUES 
+('Carlos Pérez', '656789123', 'c.perez@gmail.com', 'Madrid, España', 'Individual'),
+('María López', '645123987', 'm.lopez@hotmail.com', 'Barcelona, España', 'Grupo'),
+('Luis Fernández', '654321789', 'l.fernandez@yahoo.com', 'Sevilla, España', 'Escolar');
+
+-- Insertar datos en la tabla Recorrido
+INSERT INTO Recorrido (ID_Guia, duracion, fecha)
+VALUES 
+(1, 90, '2024-07-15'),
+(2, 120, '2024-08-01'),
+(3, 60, '2024-09-10');
+
+-- Insertar datos en la tabla Ficha_Ingreso
+INSERT INTO Ficha_Ingreso (fecha, ID_Recorrido, ID_Visitante, tipo_ingreso)
+VALUES 
+('2024-07-15', 1, 1, 'General'),
+('2024-08-01', 2, 2, 'Estudiante'),
+('2024-09-10', 3, 3, 'Tercera Edad');
+
+-- Insertar datos en la tabla Recorrido_Zona
+INSERT INTO Recorrido_Zona (ID_Recorrido, ID_Zona)
+VALUES 
+(1, 1),
+(2, 2),
+(3, 3);
+
+-- Insertar datos en la tabla Prestamo
+INSERT INTO Prestamo (ID_Prestador, ID_Contrato, fecha_prestamo, fecha_devolucion)
+VALUES 
+(1, 1, '2024-01-10', '2024-06-10'),
+(2, 2, '2023-07-05', '2023-12-01'),
+(3, 3, '2024-03-20', '2025-03-20');
+
+-- Insertar datos en la tabla Exposicion
+INSERT INTO Exposicion (ID_Zona, nombre, fecha_inicio, fecha_fin)
+VALUES 
+(1, 'Picasso: La evolución del cubismo', '2024-07-01', '2024-12-31'),
+(2, 'Esculturas Renacentistas', '2024-03-15', '2024-10-15'),
+(3, 'Fotografía Contemporánea', '2024-05-01', '2024-11-01');
+
+-- Insertar datos en la tabla Obra
+INSERT INTO Obra (nombre, ID_Autor, ID_Categoria, ID_Exposicion, ID_Prestamo, anio_creacion, descripcion, valor_estimado)
+VALUES 
+('Guernica', 1, 1, 1, 1, 1937, 'Una obra maestra de Picasso que retrata la guerra civil española', 200000000),
+('Mona Lisa', 2, 1, 2, 2, 1503, 'Retrato de una mujer de enigmática sonrisa', 850000000),
+('Las Dos Fridas', 3, 1, 3, 3, 1939, 'Autorretrato dual de Frida Kahlo', 150000000);
+
+
+USE Museo
+
+
+-- REALIZAMOS CONSULTAS BASICAS
+
+-- Mostrar todos los trabajadores
+
+SELECT * FROM Guia
+
+-- Mostrar todas las obras 
+
+SELECT nombre FROM Obra
+
+--Mostrar todos los autores y sus obras
+
+SELECT 
+    a.nombre AS Autor, 
+    o.nombre AS Obra 
+FROM 
+    Autor a
+INNER JOIN 
+    Obra o ON a.ID_Autor = o.ID_Autor;
+
+
+--Listar todas las exposiciones junto con las zonas en las que se encuentran
+SELECT 
+    e.nombre AS Exposicion, 
+    z.nombre AS Zona, 
+    e.fecha_inicio, 
+    e.fecha_fin 
+FROM 
+    Exposicion e
+INNER JOIN 
+    Zona z ON e.ID_Zona = z.ID_Zona;
+
+
+--Obtener el número total de visitantes por tipo
+SELECT 
+    tipo_visitante, 
+    COUNT(*) AS TotalVisitantes 
+FROM 
+    Visitante 
+GROUP BY 
+    tipo_visitante;
+
+
+--Consultar los detalles de las obras en una exposición específica
+
+SELECT 
+    o.nombre AS Obra, 
+    a.nombre AS Autor, 
+    c.nombre AS Categoria 
+FROM 
+    Obra o
+INNER JOIN 
+    Autor a ON o.ID_Autor = a.ID_Autor
+INNER JOIN 
+    Categoria c ON o.ID_Categoria = c.ID_Categoria
+WHERE 
+    o.ID_Exposicion = 1; -- Cambia 1 por el ID de la exposición deseada
+
+--Ver todos los recorridos y los guías que los realizan
+SELECT 
+    r.ID_Recorrido, 
+    g.nombre AS Guia, 
+    r.duracion, 
+    r.fecha 
+FROM 
+    Recorrido r
+INNER JOIN 
+    Guia g ON r.ID_Guia = g.ID_Guia;
+
+
+--Listar todos los préstamos y las obras asociadas
+
+SELECT 
+    p.ID_Prestamo, 
+    pr.nombre AS Prestador, 
+    o.nombre AS Obra, 
+    p.fecha_prestamo, 
+    p.fecha_devolucion 
+FROM 
+    Prestamo p
+INNER JOIN 
+    Prestador pr ON p.ID_Prestador = pr.ID_Prestador
+INNER JOIN 
+    Obra o ON p.ID_Prestamo = o.ID_Prestamo;
+
+
+--Mostrar los visitantes que han ingresado en un recorrido específico
+SELECT 
+    v.nombre AS Visitante, 
+    f.fecha AS FechaIngreso 
+FROM 
+    Ficha_Ingreso f
+INNER JOIN 
+    Visitante v ON f.ID_Visitante = v.ID_Visitante
+WHERE 
+    f.ID_Recorrido = 1; -- Cambia 1 por el ID del recorrido deseado
+
+
+--Obtener la cantidad de obras por categoría
+SELECT 
+    c.nombre AS Categoria, 
+    COUNT(o.ID_Obra) AS TotalObras 
+FROM 
+    Categoria c
+LEFT JOIN 
+    Obra o ON c.ID_Categoria = o.ID_Categoria
+GROUP BY 
+    c.nombre;
+
+
